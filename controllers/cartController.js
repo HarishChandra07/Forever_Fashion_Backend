@@ -1,75 +1,104 @@
-import userModel from "../models/userModel.js"
+import userModel from "../models/userModel.js";
 
-
-// add products to user cart
-const addToCart = async (req,res) => {
+// Add products to user cart
+const addToCart = async (req, res) => {
     try {
-        
-        const { userId, itemId, size } = req.body
+        const { userId, itemId, size } = req.body;
 
-        const userData = await userModel.findById(userId)
+        const userData = await userModel.findById(userId);
         let cartData = await userData.cartData;
 
         if (cartData[itemId]) {
             if (cartData[itemId][size]) {
-                cartData[itemId][size] += 1
-            }
-            else {
-                cartData[itemId][size] = 1
+                cartData[itemId][size] += 1;
+            } else {
+                cartData[itemId][size] = 1;
             }
         } else {
-            cartData[itemId] = {}
-            cartData[itemId][size] = 1
+            cartData[itemId] = {};
+            cartData[itemId][size] = 1;
         }
 
-        await userModel.findByIdAndUpdate(userId, {cartData})
+        await userModel.findByIdAndUpdate(userId, { cartData });
 
-        res.json({ success: true, message: "Added To Cart" })
-
+        res.json({ success: true, message: "Added To Cart" });
     } catch (error) {
-        console.log(error)
-        res.json({ success: false, message: error.message })
+        console.log(error);
+        res.json({ success: false, message: error.message });
     }
-}
+};
 
-// update user cart
-const updateCart = async (req,res) => {
+// Update user cart
+const updateCart = async (req, res) => {
     try {
-        
-        const { userId ,itemId, size, quantity } = req.body
+        const { userId, itemId, size, quantity } = req.body;
 
-        const userData = await userModel.findById(userId)
+        const userData = await userModel.findById(userId);
         let cartData = await userData.cartData;
 
-        cartData[itemId][size] = quantity
+        cartData[itemId][size] = quantity;
 
-        await userModel.findByIdAndUpdate(userId, {cartData})
-        res.json({ success: true, message: "Cart Updated" })
-
+        await userModel.findByIdAndUpdate(userId, { cartData });
+        res.json({ success: true, message: "Cart Updated" });
     } catch (error) {
-        console.log(error)
-        res.json({ success: false, message: error.message })
+        console.log(error);
+        res.json({ success: false, message: error.message });
     }
-}
+};
 
-
-// get user cart data
-const getUserCart = async (req,res) => {
-
+// Get user cart data
+const getUserCart = async (req, res) => {
     try {
-        
-        const { userId } = req.body
-        
-        const userData = await userModel.findById(userId)
+        const { userId } = req.body;
+
+        const userData = await userModel.findById(userId);
         let cartData = await userData.cartData;
 
-        res.json({ success: true, cartData })
-
+        res.json({ success: true, cartData });
     } catch (error) {
-        console.log(error)
-        res.json({ success: false, message: error.message })
+        console.log(error);
+        res.json({ success: false, message: error.message });
     }
+};
 
-}
+// Clear cart
+const clearCart = async (req, res) => {
+    try {
+        const { userId } = req.body;
 
-export { addToCart, updateCart, getUserCart }
+        await userModel.findByIdAndUpdate(userId, { cartData: {} });
+
+        res.json({ success: true, message: "Cart Cleared" });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// Remove item from cart
+const removeFromCart = async (req, res) => {
+    try {
+        const { userId, itemId, size } = req.body;
+
+        const userData = await userModel.findById(userId);
+        let cartData = await userData.cartData;
+
+        if (cartData[itemId] && cartData[itemId][size]) {
+            delete cartData[itemId][size];
+
+            // If no sizes left for this item, remove the item
+            if (Object.keys(cartData[itemId]).length === 0) {
+                delete cartData[itemId];
+            }
+        }
+
+        await userModel.findByIdAndUpdate(userId, { cartData });
+
+        res.json({ success: true, message: "Item Removed From Cart" });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+export { addToCart, updateCart, getUserCart, clearCart, removeFromCart };
